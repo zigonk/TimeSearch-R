@@ -19,6 +19,7 @@ from torchvision.transforms import InterpolationMode
 from time_r1.utils.video_tools import video_tool_call
 import numpy as np
 from time_r1.utils.clip_service import SiglipClient
+from time_r1.utils.sparse_table_memory import SparseTableMemory
 from time_r1.utils.tafr import construct_temporal_augmented_frames
 
 TOTAL_PIXELS = 256 * 60 * 28 * 28
@@ -43,7 +44,15 @@ DEFAULT_CACHE_VIDEO_KWARGS = {
     "total_pixels": TOTAL_CACHE_PIXELS,
 }
 
+
 clip_model = SiglipClient()
+
+
+def build_sparse_memory(frame_embeddings: torch.Tensor) -> SparseTableMemory:
+    memory = SparseTableMemory(max_frames=max(len(frame_embeddings), 2))
+    memory.build_from_embeddings(frame_embeddings)
+    return memory
+
 DEFAULT_SYSTEM_PROMPT = "You are a helpful video assistant."
 
 
@@ -210,9 +219,11 @@ class LazyVLDataset(torch.utils.data.Dataset):
         else:
             cache_video_features = clip_model.encode_images(cache_video_frames)
             torch.save(cache_video_features, item["video"] + ".feature_cache")
+        sparse_memory = build_sparse_memory(cache_video_features)
         multimodal_cache = {
             "video": cache_video_frames,
             "embedding": cache_video_features,
+            "sparse_memory": sparse_memory,
             "fps": cache_video_sample_fps,
         }
         preview_video_ele = {

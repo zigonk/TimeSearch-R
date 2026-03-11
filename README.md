@@ -32,13 +32,13 @@ Prepare the environment with CUDA and PyTorch (CUDA 12.4 and PyTorch 2.6.0 in ou
 pip install -r requirements.txt
 ```
 
-**Step 2:** Run the clip server for video frame retrieval.
+**Step 2:** Run the clip server for SigLIP frame/text encoding.
 
 Download the pre-trained SigLIP model.
 ```bash
 huggingface-cli download google/siglip-so400m-patch14-384 --local-dir /path/to/your/local/filedir
 ```
-Modify the `clip_as_service/server/clip_server/torch-flow.yml` to use the downloaded local model path and run the SigLIP server.
+Modify `clip_as_service/server/clip_server/torch-flow.yml` to point to your local model path, then start the SigLIP server:
 
 ```bash
 cd clip_as_service/server && pip3 install .
@@ -50,6 +50,8 @@ export PYTHONPATH=$PYTHONPATH:.
 
 python3 -m clip_server
 ```
+
+TimeSearch-R now uses sparse-table memory on top of these SigLIP embeddings for streaming retrieval.
 
 ### 📦️ Dataset & Model
 
